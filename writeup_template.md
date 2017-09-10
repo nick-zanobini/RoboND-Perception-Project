@@ -5,13 +5,14 @@
 
 
 # Required Steps for a Passing Submission:
-1. Extract features and train an SVM model on new objects (see `pick_list_*.yaml` in `/pr2_robot/config/` for the list of models you'll be trying to identify). 
+1. Extract features and train an SVM model on new objects (see `pick_list_*.yaml` in `/pr2_robot/config/` for the list of models you'll be trying to identify).
+    * I binned each image into 32 bins after converting to the HSV color space and extracted features from 5000 images per item in `pick_list_3.yaml`. I figured that all the items are in the largest pick list so it will work on the two previous lists.
 2. Write a ROS node and subscribe to `/pr2/world/points` topic. This topic contains noisy point cloud data that you must work with.
 3. Use filtering and RANSAC plane fitting to isolate the objects of interest from the rest of the scene.
 4. Apply Euclidean clustering to create separate clusters for individual items.
 5. Perform object recognition on these objects and assign them labels (markers in RViz).
 6. Calculate the centroid (average in x, y and z) of the set of points belonging to that each object.
-7. Create ROS messages containing the details of each object (name, pick_pose, etc.) and write these messages out to `.yaml` files, one for each of the 3 scenarios (`test1-3.world` in `/pr2_robot/worlds/`).  [See the example `output.yaml` for details on what the output should look like.](https://github.com/udacity/RoboND-Perception-Project/blob/master/pr2_robot/config/output.yaml)  
+7. Create ROS messages containing the details of each object (name, pick_pose, etc.) and write these messages out to `.yaml` files, one for each of the 3 scenarios (`test1-3.world` in `/pr2_robot/worlds/`).  See the example `output.yaml` for details on what the output should look like.  
 8. Submit a link to your GitHub repo for the project or the Python code for your perception pipeline and your output `.yaml` files (3 `.yaml` files, one for each test world).  You must have correctly identified 100% of objects from `pick_list_1.yaml` for `test1.world`, 80% of items from `pick_list_2.yaml` for `test2.world` and 75% of items from `pick_list_3.yaml` in `test3.world`.
 9. Congratulations!  Your Done!
 
@@ -36,13 +37,94 @@ You're reading it!
 
 ### Exercise 1, 2 and 3 pipeline implemented
 #### 1. Complete Exercise 1 steps. Pipeline for filtering and RANSAC plane fitting implemented.
+* Start with World 2: 
+
+    Registered Points |  
+    :-------------------------:|
+    ![starting_image](images/registered_points.png)  |  
+
+* Filter noise with `statistical_outlier_filter`
+
+    Unfiltered Point Cloud             |  Filtered Point Cloud
+    :-------------------------:|:-------------------------:
+    ![unfiltered](images/unfiltered.png)  |  ![filtered](images/filtered.png)
+
+* Downsample the filtered point cloud with the `voxel_grid_filter` so that each cube with the shape `LEAF_SIZE x LEAF_SIZE x LEAF_SIZE` is represented by the centroid of that cube.
+
+* Filter out any data outside the region of interest (The objects on the table and the table) with a `passthrough_filter` in both the `z` and `x` axes 
+    
+    Parameter | Value
+    :--------:|:--------:
+    Voxel Filter: LEAF_SIZE | 0.01
+    Passthrough Filter (z): axis min | 0.609
+    Passthrough Filter (z): axis max | 1.4
+    Passthrough Filter (x): axis min | -0.50
+    Passthrough Filter (x): axis max | 0.50
+    RANSAC Segmentation: max distance | 0.01
+    
+    * False positive detections without the x-axis filter.
+    
+        Bins Detected as Objects |
+        :-------------------------:|
+        ![bad_detection](images/pr2_detection.png)  |  
+    
+* Extract inliers (objects on the table) and outliers (table) using the RANSAC Plane Segmentation
+
+    Inliers (Objects)             |  Outliers (Table)
+    :-------------------------:|:-------------------------:
+    ![inliers](images/objects_filtered.png)  |  ![outliers](images/table.png)
 
 #### 2. Complete Exercise 2 steps: Pipeline including clustering for segmentation implemented.  
+* Segment each object using Euclidean Clustering
+    * My parameters were: 
+    
+    Parameter | Value
+    :--------:|:--------:
+    ClusterTolerance | 0.014
+    MinClusterSize | 20
+    MaxClusterSize | 2000
+ 
+    Euclidean Clustered Objects |
+    :-------------------------:|
+    ![euclidean_clustering](images/cluster.png)  |
 
-#### 2. Complete Exercise 3 Steps.  Features extracted and SVM trained.  Object recognition implemented.
+#### 3. Complete Exercise 3 Steps.  Features extracted and SVM trained.  Object recognition implemented.
+
+* Here are the parameters I used to capture features and train my model: 
+
+    Parameter | Value
+    :--------:|:--------:
+    Pictures | 10,000
+    Bins (Color & Normals) | 64
+    Color Space | HSV
+    Total Features | 80,000
+    
+    Model Training Output |
+    :-------------------------:|
+    ![training_output](images/training_output.png)  |
+    
+    Confusion Matrix (Not Normalized) |  Confusion Matrix (Normalized)
+    :-------------------------:|:-------------------------:
+    ![raw_confusion_matrix](images/confusion_matrix_a.png)  |  ![normalized_confusion_matrix](images/confusion_matrix_b.png)
+
+*  Model Training Output |
+    :-------------------------:|
+    ![final_result](images/pr2_detection.gif)  |
+
 Here is an example of how to include an image in your writeup.
 
 ![demo-1](https://user-images.githubusercontent.com/20687560/28748231-46b5b912-7467-11e7-8778-3095172b7b19.png)
+
+
+
+
+Here's | A | Snappy | Table
+--- | --- | --- | ---
+1 | `highlight` | **bold** | 7.41
+2 | a | b | c
+3 | *italic* | text | 403
+4 | 2 | 3 | abcd
+
 
 ### Pick and Place Setup
 
