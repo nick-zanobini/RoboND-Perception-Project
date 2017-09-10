@@ -1,8 +1,46 @@
 ## Project: Perception Pick & Place
-### Writeup Template: You can use this file as a template for your writeup if you want to submit it as a markdown file, but feel free to use some other method and submit a pdf if you prefer.
 
----
+# Project Setup
+For this setup, catkin_ws is the name of active ROS Workspace, if your workspace name is different, change the commands accordingly
+If you do not have an active ROS workspace, you can create one by:
 
+```sh
+$ mkdir -p ~/catkin_ws/src
+$ cd ~/catkin_ws/
+$ catkin_make
+```
+
+Now that you have a workspace, clone or download this repo into the src directory of your workspace:
+```sh
+$ cd ~/catkin_ws/src
+$ git clone https://github.com/nick-zanobini/RoboND-Perception-Project.git
+```
+### Note: If you have the Kinematics Pick and Place project in the same ROS Workspace as this project, please remove the 'gazebo_grasp_plugin' directory from the `RoboND-Perception-Project/` directory otherwise ignore this note. 
+
+Now install missing dependencies using rosdep install:
+```sh
+$ cd ~/catkin_ws
+$ rosdep install --from-paths src --ignore-src --rosdistro=kinetic -y
+```
+Build the project:
+```sh
+$ cd ~/catkin_ws
+$ catkin_make
+```
+Add following to your .bashrc file
+```
+export GAZEBO_MODEL_PATH=~/catkin_ws/src/RoboND-Perception-Project/pr2_robot/models:$GAZEBO_MODEL_PATH
+```
+
+If you haven’t already, following line can be added to your .bashrc to auto-source all new terminals
+```
+source ~/catkin_ws/devel/setup.bash
+```
+
+You can launch the project scenario like this:
+```sh
+$ roslaunch pr2_robot pick_place_project.launch
+```
 
 # Required Steps for a Passing Submission:
 1. Extract features and train an SVM model on new objects (see `pick_list_*.yaml` in `/pr2_robot/config/` for the list of models you'll be trying to identify).
@@ -27,13 +65,6 @@
 
 ## [Rubric](https://review.udacity.com/#!/rubrics/1067/view) Points
 ### Here I will consider the rubric points individually and describe how I addressed each point in my implementation.  
-
----
-### Writeup / README
-
-#### 1. Provide a Writeup / README that includes all the rubric points and how you addressed each one.  You can submit your writeup as markdown or pdf.  
-
-You're reading it!
 
 ### Exercise 1, 2 and 3 pipeline implemented
 #### 1. Complete Exercise 1 steps. Pipeline for filtering and RANSAC plane fitting implemented.
@@ -107,33 +138,13 @@ You're reading it!
     :-------------------------:|:-------------------------:
     ![raw_confusion_matrix](images/confusion_matrix_a.png)  |  ![normalized_confusion_matrix](images/confusion_matrix_b.png)
 
-*  Model Training Output |
+	Model Training Output |
     :-------------------------:|
     ![final_result](images/pr2_detection.gif)  |
 
-Here is an example of how to include an image in your writeup.
 
-![demo-1](https://user-images.githubusercontent.com/20687560/28748231-46b5b912-7467-11e7-8778-3095172b7b19.png)
+#### 4. Output the correctly identified objects to the corresponding `.yaml` file.
 
-
-
-
-Here's | A | Snappy | Table
---- | --- | --- | ---
-1 | `highlight` | **bold** | 7.41
-2 | a | b | c
-3 | *italic* | text | 403
-4 | 2 | 3 | abcd
-
-
-### Pick and Place Setup
-
-#### 1. For all three tabletop setups (`test*.world`), perform object recognition, then read in respective pick list (`pick_list_*.yaml`). Next construct the messages that would comprise a valid `PickPlace` request output them to `.yaml` format.
-
-And here's another image! 
-![demo-2](https://user-images.githubusercontent.com/20687560/28748286-9f65680e-7468-11e7-83dc-f1a32380b89c.png)
-
-Spend some time at the end to discuss your code, what techniques you used, what worked and why, where the implementation might fail and how you might improve it if you were going to pursue this project further.  
-
+    These can be found in the root directory of the project.
 
 
